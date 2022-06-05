@@ -201,7 +201,11 @@ n = foldL 0 (λ { (x , y) → x + y}) (1 ∷ 2 ∷ [])
 
 -- Ejercicio 1) Completar las siguientes definiciones
 
-open import Data.Tree.Binary 
+-- open import Data.Tree.Binary 
+
+data Tree (A : Set) : Set where
+  leaf : Tree A
+  node : Tree A → A → Tree A → Tree A
 
 -- Functor que captura la estructura de los árboles binarios
 TreeF : Regular

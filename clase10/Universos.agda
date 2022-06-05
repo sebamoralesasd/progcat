@@ -88,7 +88,7 @@ mapB (F ⊚ G) f g ⟨ x ⟩ = ⟨ mapB F (mapB G f g) (mapB (F ⊚ G) f g) x �
 
 {-# TERMINATING #-}
 pmap : {A B : Set } (F : Signa) → (A → B) → μ' F A → μ' F B
-pmap F f ⟨ x ⟩ = ⟨ ? ⟩
+pmap F f ⟨ x ⟩ = ⟨ {!   !} ⟩
 
 
 

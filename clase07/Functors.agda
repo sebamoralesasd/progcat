@@ -110,11 +110,21 @@ MaybeF = functor Maybe
 -- Ejercicio: Funtor Lista
 open import Data.List.Base using (List ; [] ; _∷_) renaming (map to mapList) public
 
+ListF-id : {A : Set} → (x : List A) → mapList (iden Sets) x ≅ iden Sets x
+ListF-id [] = refl
+ListF-id {A} (x ∷ xs) = cong (x ∷_) (ListF-id {A} xs)
+
+ListF-comp : {X Y Z : Set} {f : Hom Sets Y Z} {g : Hom Sets X Y} →
+      (x : List X) →
+      mapList ((Sets ∙ f) g) x ≅ (Sets ∙ mapList f) (mapList g) x
+ListF-comp [] = refl
+ListF-comp {f = f} {g} (x ∷ xs) = cong (_∷_ (f (g x))) (ListF-comp (xs))
+
 ListF : Fun Sets Sets
 ListF = functor List
                 mapList
-                {!!}
-                {!!}
+                (ext λ x → ListF-id x)
+                (ext λ x → ListF-comp x)
 
 -- Ejercicio EXTRA: Bifuntor de árboles con diferente información en nodos y hojas
 data Tree (A B : Set) : Set where
@@ -132,7 +142,10 @@ TreeF = {!!}
   es un bifunctor Hom : (C Op) ×C C → Sets
   -}
 HomF : ∀{a}{b}{C : Cat {a} {b}} → Fun ((C Op) ×C C) (Categories.Sets.Sets {b})
-HomF {C = C} = {!   !}
+HomF {C = C} = functor {!   !} 
+                       {!   !} 
+                       {!   !} 
+                       {!   !}
 
 --------------------------------------------------
 {- Composición de funtores -}
@@ -218,5 +231,4 @@ FunIso  = {! !}
  OJO: Hace falta hacer cambios en las definiciones, 
       ya que usamos otra definición de categoría.
 -}
-
 
