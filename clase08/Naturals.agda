@@ -305,6 +305,6 @@ module FunctorCoproduct (cop : Coproducts C) where
  -- Ejercicio: Leer la definición de coproducto de funtores _+F_
  -- y definir copairF 
 
- copairF : ∀{F G H K} →
-          (NatT {C = D} F H) → (NatT G K) → NatT (F +F G) (H +F K)
- copairF = {!   !} 
+--  copairF : ∀{F G H K} →
+--           (NatT {C = D} F H) → (NatT G K) → NatT (F +F G) (H +F K)
+--  copairF = {!   !} 
