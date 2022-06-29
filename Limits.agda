@@ -26,7 +26,6 @@ record Cone {C D : Cat {a} {b}}{F : Fun C D} : Set (a ⊔ b) where
   open Cat D using () renaming (_∙_ to _∙D_)
   field 
     Apex : Obj D
-    --ψ : {X : Obj D} → NatT (K X) F
     --ψ : NatT (K Apex) F
     ψ : ∀ (X : Obj C) → Hom D Apex (OMap F X)
     law : ∀ {X Y : Obj C} (f : Hom C X Y) → (HMap F f) ∙D ψ X ≅ ψ Y
@@ -88,31 +87,6 @@ Cones {C = C} {D} {F} =
     }
 -- definir cat vacia (iso al terminal) y cat 2 (iso al producto)
 
--- empty : Cat {lzero} {lzero}
--- empty = 
---   record
---     { Obj = ⊥
---     ; Hom = HomEmpty
---     ; iden = IdEmpty
---     ; _∙_ = CompEmpty
---     ; idl = IdLEmpty
---     ; idr = IdREmpty
---     ; ass = AssEmpty
---     }
---   where HomEmpty : ⊥ → ⊥ → Set
---         HomEmpty () q 
---         IdEmpty : {X : ⊥} → HomEmpty X X
---         IdEmpty {()}
---         CompEmpty : {X Y Z : ⊥} → HomEmpty Y Z → HomEmpty X Y → HomEmpty X Z
---         CompEmpty {()}
---         IdLEmpty : {X Y : ⊥} {f : HomEmpty X Y} → CompEmpty IdEmpty f ≅ f
---         IdLEmpty {()}
---         IdREmpty : {X Y : ⊥} {f : HomEmpty X Y} → CompEmpty f IdEmpty ≅ f
---         IdREmpty {()}
---         AssEmpty : {W X Y Z : ⊥} {f : HomEmpty Y Z} {g : HomEmpty X Y}{h : HomEmpty W X} →
---           CompEmpty (CompEmpty f g) h ≅ CompEmpty f (CompEmpty g h)
---         AssEmpty {()}
-
 
 {- Un límite es el objeto terminal de la categoría de conos. -}
 
@@ -130,10 +104,10 @@ record Limit {C D : Cat {a} {b}}{F : Fun C D} : Set (lsuc (a ⊔ b)) where
 {- Un objeto terminal es un límite.
 Se demuestra que hay un isomorfimo entre el límite y la categoría vacía. -}
 
-emptyLift : Cat {a} {b}
-emptyLift {a} {b} = 
+empty : Cat {lzero} {lzero}
+empty = 
   record
-    { Obj = ⊥L
+    { Obj = ⊥
     ; Hom = HomEmpty
     ; iden = IdEmpty
     ; _∙_ = CompEmpty
@@ -141,19 +115,17 @@ emptyLift {a} {b} =
     ; idr = IdREmpty
     ; ass = AssEmpty
     }
-  where ⊥L : Set a
-        ⊥L = Lift a ⊥
-        HomEmpty : ⊥L → ⊥L → Set b
-        HomEmpty () q
-        IdEmpty : {X : ⊥L} → HomEmpty X X
+  where HomEmpty : ⊥ → ⊥ → Set
+        HomEmpty () q 
+        IdEmpty : {X : ⊥} → HomEmpty X X
         IdEmpty {()}
-        CompEmpty : {X Y Z : ⊥L} → HomEmpty Y Z → HomEmpty X Y → HomEmpty X Z
+        CompEmpty : {X Y Z : ⊥} → HomEmpty Y Z → HomEmpty X Y → HomEmpty X Z
         CompEmpty {()}
-        IdLEmpty : {X Y : ⊥L} {f : HomEmpty X Y} → CompEmpty IdEmpty f ≅ f
+        IdLEmpty : {X Y : ⊥} {f : HomEmpty X Y} → CompEmpty IdEmpty f ≅ f
         IdLEmpty {()}
-        IdREmpty : {X Y : ⊥L} {f : HomEmpty X Y} → CompEmpty f IdEmpty ≅ f
+        IdREmpty : {X Y : ⊥} {f : HomEmpty X Y} → CompEmpty f IdEmpty ≅ f
         IdREmpty {()}
-        AssEmpty : {W X Y Z : ⊥L} {f : HomEmpty Y Z} {g : HomEmpty X Y}{h : HomEmpty W X} →
+        AssEmpty : {W X Y Z : ⊥} {f : HomEmpty Y Z} {g : HomEmpty X Y}{h : HomEmpty W X} →
           CompEmpty (CompEmpty f g) h ≅ CompEmpty f (CompEmpty g h)
         AssEmpty {()}
 
