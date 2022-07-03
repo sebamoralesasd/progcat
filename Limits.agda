@@ -26,7 +26,6 @@ record Cone (C : Cat {a} {b}) (D : Cat {c} {d}) (F : Fun C D) : Set (a ⊔ b ⊔
   open Cat D using () renaming (_∙_ to _∙D_)
   field 
     Apex : Obj D
-    --ψ : {X : Obj D} → NatT (K X) F
     --ψ : NatT (K Apex) F
     ψ : ∀ (X : Obj C) → Hom D Apex (OMap F X)
     law : ∀ {X Y : Obj C} (f : Hom C X Y) → (HMap F f) ∙D ψ X ≅ ψ Y
@@ -118,44 +117,91 @@ empty =
 
 open import Categories.Terminal
 
--- module Limite {C : Cat {a} {b}} {D : Cat {c} {d}}{F : Fun C D}
---   (Co : Obj (Cones {C = C} {D} {F}) )(hasTerminal : Terminal Cones Co) where
-
 record Limit (C : Cat {a} {b}) (D : Cat {c} {d}) (F : Fun C D) : Set (lsuc (a ⊔ b ⊔ c ⊔ d)) where
   constructor limite
   field
-    conoLimite : Obj (Cones C D F)
-    terminal : Terminal (Cones C D F) conoLimite
+    conoLim : Obj (Cones C D F)
+    conoLim-terminal : Terminal (Cones C D F) conoLim
+
+open Limit
+
 
 {- Un objeto terminal es un límite.
 Se demuestra que hay un isomorfimo entre el límite y la categoría vacía. -}
 
-module Empty-lim {D : Cat {c} {d}} (T : Obj D) (hasTerminal : Terminal D T) where
-  F : Fun empty D
-  F = functor (oMap) (hMap) fId fComp
-      where open Cat D using () renaming (Hom to HomD ; _∙_ to _∙D_)
-            oMap : ⊥ → Obj D
-            oMap ()
-            hMap : {X Y : ⊥} → Hom empty X Y → HomD (oMap X) (oMap Y)
-            hMap {()} {Y}
-            fId : {X : ⊥} → hMap (iden empty) ≅ iden D {oMap X}
-            fId {()}
-            fComp : {X Y Z : ⊥} {f : Hom empty Y Z} {g : Hom empty X Y} → 
-              hMap {X} {Z} (_∙_ empty f g) ≅ (D ∙ hMap f) (hMap g)
-            fComp {()} {Y} {Z}
+module Lim-terminal {D : Cat {c} {d}}{F : Fun empty D}(L : Limit empty D F) where
 
-  lim-empty : Limit empty D F
-  lim-empty = limite (cono T ψ-⊥ law-⊥) {!   !}
+  open Limit L renaming (conoLim to conoL ; conoLim-terminal to conoL-t)
+
+  term-is-lim : Terminal D (Apex conoL)
+  term-is-lim = term t-term law-term
     where open Cat D using () renaming (Hom to HomD ; _∙_ to _∙D_)
           open Terminal
-          ψ-⊥ : (X : ⊥) → HomD T (OMap F X)
-          ψ-⊥ = λ {()}
-          law-⊥ : {X Y : ⊥} (f : Hom empty X Y) → HMap F {X} {Y} f ∙D ψ-⊥ X ≅ ψ-⊥ Y
-          law-⊥ {()} {Y}
-          conoM-law : {X : Obj empty} {Co : Cone empty D F} → ψ-⊥ X ∙D (t hasTerminal) ≅ ψ Co X
-          conoM-law {()}
-          term-t : {X : Cone empty D F} → ConeMorph X (cono T ψ-⊥ law-⊥)
-          term-t {X} = conoM (t hasTerminal) (conoM-law {Co = X})
-          term-⊥ : Terminal (Cones empty D F) (cono T ψ-⊥ (λ {X} {Y} → law-⊥))
-          term-⊥ = term term-t {!   !}
-    -- Hacer con where
+          conoN : (Na : Obj D) → Cone empty D F
+          conoN Na = cono Na conoN-ψ conoN-law
+            where conoN-ψ : (X : ⊥) → HomD Na (OMap F X)
+                  conoN-ψ ()
+                  conoN-law : {X Y : ⊥} (f : Hom empty X Y) → HMap F f ∙D conoN-ψ X ≅ conoN-ψ Y
+                  conoN-law {()} {Y}
+          t-term : {N : Obj D} → HomD N (Apex conoL)
+          t-term {N} = CHom (t conoL-t {conoN N})
+          law-term : {X : Obj D} {f : HomD X (Apex conoL)} → t-term {X} ≅ f
+          law-term {X} {f} = 
+            proof 
+              t-term {X}
+              ≅⟨ refl ⟩
+              -- t conoL-t {conoN X} == Hom (Cones empty D F) (conoN X) conoL
+              CHom (t conoL-t {conoN X})
+              ≅⟨ cong CHom (law conoL-t {conoN X} {asd}) ⟩
+              f
+              ∎
+                where
+                  asd1 : (Od : Obj D){X = X₁ : ⊥} → ψ conoL X₁ ∙D f ≅ ψ (conoN Od) X₁
+                  asd1 (Od) {()}
+                  asd : ConeMorph (conoN X) (conoL)
+                  asd = conoM f (asd1 (X))
+
+
+
+{- Un producto es un límite. 
+Se construye un producto a partir del límite que se conforma a partir de la categoría 2 -}
+
+data Bool : Set where
+        tt : Bool
+        ff : Bool
+
+open import Categories.Discrete
+
+-- Renombrar a categoria 2
+Prod : Cat
+Prod = Discrete (Bool)
+
+FunProd : (D : Cat {c} {d}) (A B : Obj D) → Fun Prod D
+FunProd D A B = 
+  functor oMap hMap refl (λ {X} {Y} {Z} {f} {g} → fComp {X} {Y} {Z} {f} {g})
+    where
+      oMap : Obj Prod → Obj D
+      oMap tt = A
+      oMap ff = B
+      hMap : {X Y : Obj Prod} → Hom Prod X Y → Hom D (oMap X) (oMap Y)
+      hMap {X} {.X} refl = iden D
+      fComp : {X Y Z : Obj Prod} {f : Hom Prod Y Z} {g : Hom Prod X Y} → hMap ((Prod ∙ f) g) ≅ (D ∙ hMap f) (hMap g)
+      fComp {X} {.X} {.X} {refl} {refl} = Library.sym (idr D)
+
+
+
+module Lim-product {D : Cat {c} {d}}{A B : Obj D}(L : Limit Prod D (FunProd D A B)) where
+
+  open import Categories.Products D
+  open Limit L renaming (conoLim to conoP ; conoLim-terminal to conoP-t)
+
+  F : Fun Prod D
+  F = FunProd D A B
+  prod-is-lim : Products
+  prod-is-lim = 
+    prod times {!   !} {!   !} {!   !} {!   !} {!   !} {!   !}
+      where
+        times : Obj D → Obj D → Obj D
+        times _ _ = Apex conoP
+        proj1 : {X : Obj D} {Y : Obj D} → Hom D (Apex conoP) X
+        proj1 {X} {Y} = {!   !}
