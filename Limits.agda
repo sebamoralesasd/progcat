@@ -8,13 +8,12 @@ open import Functors
 open import Functors.Constant
 open import Categories
 
-open Cat 
+open Cat
 open Fun
 
 private
   variable
     a b c d : Level
-    --C D : Cat {a} {b}
 
 {- Límites -}
 
@@ -24,7 +23,7 @@ que van desde una cúspide (un objeto de D) a objetos de la categoría D. -}
 record Cone (C : Cat {a} {b}) (D : Cat {c} {d}) (F : Fun C D) : Set (a ⊔ b ⊔ c ⊔ d) where
   constructor cono
   open Cat D using () renaming (_∙_ to _∙D_)
-  field 
+  field
     Apex : Obj D
     --ψ : NatT (K Apex) F
     ψ : ∀ (X : Obj C) → Hom D Apex (OMap F X)
@@ -46,11 +45,11 @@ open ConeMorph
 {- Composición de conos -}
 Cone-comp : {C : Cat {a} {b}} {D : Cat {c} {d}}{F : Fun C D}{Ca Cb Cc : Cone C D F} →
   ConeMorph Cb Cc → ConeMorph Ca Cb → ConeMorph Ca Cc
-Cone-comp {C = C} {D} {F} {Ca} {Cb} {Cc} bc ab 
+Cone-comp {C = C} {D} {F} {Ca} {Cb} {Cc} bc ab
   = conoM (CHom bc ∙D CHom ab) ψ-comp
     where open Cat D using () renaming (Hom to HomD ; _∙_ to _∙D_)
           ψ-comp : {X : Obj C} → ψ Cc X ∙D CHom bc ∙D CHom ab ≅ ψ Ca X
-          ψ-comp {X} = proof 
+          ψ-comp {X} = proof
                    ψ Cc X ∙D CHom bc ∙D CHom ab
                    ≅⟨ refl ⟩
                    ψ Cc X ∙D (CHom bc ∙D CHom ab)
@@ -69,13 +68,13 @@ ConeMorph-eq : {C : Cat {a} {b}} {D : Cat {c} {d}}{F : Fun C D}{Ca Cb : Cone C D
   { Cm Cm' : ConeMorph Ca Cb} →
   (CHom Cm) ≅ (CHom Cm') →
   Cm ≅ Cm'
-ConeMorph-eq {C = C} {D} {F} {Ca} {Cb} {conoM chom leyM} {conoM .chom leyM'} refl 
+ConeMorph-eq {C = C} {D} {F} {Ca} {Cb} {conoM chom leyM} {conoM .chom leyM'} refl
   = cong (conoM chom) (iext λ _ → ir leyM leyM')
 
-{- Conos como una categoria -}
 
+{- Conos como una categoria -}
 Cones : (C : Cat {a} {b}) (D : Cat {c} {d}) (F : Fun C D) → Cat {(a ⊔ b ⊔ c ⊔ d)} {lsuc (a ⊔ b ⊔ c ⊔ d)}
-Cones C D F = 
+Cones C D F =
   record
     { Obj = Cone C D F
     ; Hom = ConeMorph
@@ -85,10 +84,10 @@ Cones C D F =
     ; idr = ConeMorph-eq (idr D)
     ; ass = ConeMorph-eq (ass D)
     }
--- definir cat vacia (iso al terminal) y cat 2 (iso al producto)
 
+{- Definición de categoría vacía -}
 empty : Cat {lzero} {lzero}
-empty = 
+empty =
   record
     { Obj = ⊥
     ; Hom = HomEmpty
@@ -99,7 +98,7 @@ empty =
     ; ass = AssEmpty
     }
   where HomEmpty : ⊥ → ⊥ → Set
-        HomEmpty () q 
+        HomEmpty () q
         IdEmpty : {X : ⊥} → HomEmpty X X
         IdEmpty {()}
         CompEmpty : {X Y Z : ⊥} → HomEmpty Y Z → HomEmpty X Y → HomEmpty X Z
@@ -114,29 +113,30 @@ empty =
 
 
 {- Un límite es el objeto terminal de la categoría de conos. -}
-
 open import Categories.Terminal
 
 record Limit (C : Cat {a} {b}) (D : Cat {c} {d}) (F : Fun C D) : Set (lsuc (a ⊔ b ⊔ c ⊔ d)) where
   constructor limite
   field
-    conoLim : Obj (Cones C D F)
-    conoLim-terminal : Terminal (Cones C D F) conoLim
+    cone-lim : Obj (Cones C D F)
+    is-terminal : Terminal (Cones C D F) cone-lim
 
 open Limit
 
 
 {- Un objeto terminal es un límite.
-Se demuestra que hay un isomorfimo entre el límite y la categoría vacía. -}
-
+  Se define un objeto terminal en D con el límite que se conforma a partir
+  del funtor que va de la categoría vacía hacia D.
+-}
 module Lim-terminal {D : Cat {c} {d}}{F : Fun empty D}(L : Limit empty D F) where
 
-  open Limit L renaming (conoLim to conoL ; conoLim-terminal to conoL-t)
+  open Limit L renaming (cone-lim to conoL ; is-terminal to conoL-t)
 
   term-is-lim : Terminal D (Apex conoL)
   term-is-lim = term t-term law-term
     where open Cat D using () renaming (Hom to HomD ; _∙_ to _∙D_)
           open Terminal
+          -- Defino otro cono sobre D para usarlo en las leyes de Terminal
           conoN : (Na : Obj D) → Cone empty D F
           conoN Na = cono Na conoN-ψ conoN-law
             where conoN-ψ : (X : ⊥) → HomD Na (OMap F X)
@@ -146,62 +146,110 @@ module Lim-terminal {D : Cat {c} {d}}{F : Fun empty D}(L : Limit empty D F) wher
           t-term : {N : Obj D} → HomD N (Apex conoL)
           t-term {N} = CHom (t conoL-t {conoN N})
           law-term : {X : Obj D} {f : HomD X (Apex conoL)} → t-term {X} ≅ f
-          law-term {X} {f} = 
-            proof 
+          law-term {X} {f} =
+            proof
               t-term {X}
               ≅⟨ refl ⟩
               -- t conoL-t {conoN X} == Hom (Cones empty D F) (conoN X) conoL
               CHom (t conoL-t {conoN X})
-              ≅⟨ cong CHom (law conoL-t {conoN X} {asd}) ⟩
+              ≅⟨ cong CHom (law conoL-t {conoN X} {nl-morph}) ⟩
               f
               ∎
                 where
-                  asd1 : (Od : Obj D){X = X₁ : ⊥} → ψ conoL X₁ ∙D f ≅ ψ (conoN Od) X₁
-                  asd1 (Od) {()}
-                  asd : ConeMorph (conoN X) (conoL)
-                  asd = conoM f (asd1 (X))
+                  nl-morph-aux : (Od : Obj D){X = X₁ : ⊥} → ψ conoL X₁ ∙D f ≅ ψ (conoN Od) X₁
+                  nl-morph-aux (Od) {()}
+                  nl-morph : ConeMorph (conoN X) (conoL)
+                  nl-morph = conoM f (nl-morph-aux (X))
 
 
 
-{- Un producto es un límite. 
-Se construye un producto a partir del límite que se conforma a partir de la categoría 2 -}
+{- Un producto es un límite.
+  Se construye un producto a partir del límite que se conforma a partir
+  del funtor que va de la categoría 2 a D
+-}
 
+{- Defino dos objetos cualquiera para definir la categoría 2 -}
 data Bool : Set where
         tt : Bool
         ff : Bool
 
 open import Categories.Discrete
 
--- Renombrar a categoria 2
-Prod : Cat
-Prod = Discrete (Bool)
+-- Categoría 2
+Dos : Cat
+Dos = Discrete (Bool)
 
-FunProd : (D : Cat {c} {d}) (A B : Obj D) → Fun Prod D
-FunProd D A B = 
+-- Funtor que mapea a los dos objetos de 2 con dos
+-- objetos (A, B) de D
+FunProd : (D : Cat {c} {d}) (A B : Obj D) → Fun Dos D
+FunProd D A B =
   functor oMap hMap refl (λ {X} {Y} {Z} {f} {g} → fComp {X} {Y} {Z} {f} {g})
-    where
-      oMap : Obj Prod → Obj D
-      oMap tt = A
-      oMap ff = B
-      hMap : {X Y : Obj Prod} → Hom Prod X Y → Hom D (oMap X) (oMap Y)
-      hMap {X} {.X} refl = iden D
-      fComp : {X Y Z : Obj Prod} {f : Hom Prod Y Z} {g : Hom Prod X Y} → hMap ((Prod ∙ f) g) ≅ (D ∙ hMap f) (hMap g)
-      fComp {X} {.X} {.X} {refl} {refl} = Library.sym (idr D)
+    where open Cat D using () renaming (Hom to HomD ; _∙_ to _∙D_)
+          oMap : Obj Dos → Obj D
+          oMap tt = A
+          oMap ff = B
+          hMap : {X Y : Obj Dos} → Hom Dos X Y → HomD (oMap X) (oMap Y)
+          hMap {X} {.X} refl = iden D
+          fComp : {X Y Z : Obj Dos} {f : Hom Dos Y Z} {g : Hom Dos X Y} → hMap ((Dos ∙ f) g) ≅ (hMap f) ∙D (hMap g)
+          fComp {X} {.X} {.X} {refl} {refl} = Library.sym (idr D)
 
 
 
-module Lim-product {D : Cat {c} {d}}{A B : Obj D}(L : Limit Prod D (FunProd D A B)) where
+module Lim-product {D : Cat {c} {d}}{A B : Obj D}(L : Limit Dos D (FunProd D A B)) where
 
-  open import Categories.Products D
-  open Limit L renaming (conoLim to conoP ; conoLim-terminal to conoP-t)
+  open import Categories.ProductsCore D
+  open Limit L renaming (cone-lim to conoP ; is-terminal to conoP-t)
 
-  F : Fun Prod D
+  F : Fun Dos D
   F = FunProd D A B
-  prod-is-lim : Products
-  prod-is-lim = 
-    prod times {!   !} {!   !} {!   !} {!   !} {!   !} {!   !}
+
+  prod-is-lim : ProductsCore A B
+  prod-is-lim =
+    prodCore
+      (Apex conoP) proj1 proj2 ⟨_,_⟩ law1 law2 {!   !}
       where
-        times : Obj D → Obj D → Obj D
-        times _ _ = Apex conoP
-        proj1 : {X : Obj D} {Y : Obj D} → Hom D (Apex conoP) X
-        proj1 {X} {Y} = {!   !}
+        open Cat D using () renaming (Hom to HomD ; _∙_ to _∙D_)
+        open Terminal
+        proj1 : HomD (Apex conoP) A
+        proj1 = ψ conoP tt
+        proj2 : HomD (Apex conoP) B
+        proj2 = ψ conoP ff
+        ⟨_,_⟩ : {C : Obj D} → HomD C A → HomD C B → HomD C (Apex conoP)
+        ⟨_,_⟩ {C} f g = CHom {C = Dos} {D = D} {F = F} (t conoP-t {conoN})
+          where
+            conoN-ψ : (X : Obj Dos) → HomD C (OMap F X)
+            conoN-ψ tt = f
+            conoN-ψ ff = g
+            -- Los morfismos de Dos son solo las identidades sobre tt y ff
+            -- (por ser categoría discreta)
+            -- por lo tanto h solo podría ser una flecha de un objeto a sí mismo.
+            conoN-law : {X Y : Obj Dos} (h : Hom Dos X Y) → (HMap F h) ∙D (conoN-ψ X) ≅ conoN-ψ Y
+            conoN-law {tt} {tt} refl = idl D
+            conoN-law {ff} {ff} refl = idl D
+            conoN : Cone Dos D F
+            conoN = cono C conoN-ψ conoN-law
+        law1 : {C : Obj D} {f : HomD C A} {g : HomD C B} → proj1 ∙D ⟨ f , g ⟩ ≅ f
+        law1 {C} {f} {g} = lawMorph (t conoP-t)
+        law2 : {C : Obj D} {f : HomD C A} {g : HomD C B} → proj2 ∙D ⟨ f , g ⟩ ≅ g
+        law2 {C} {f} {g} = lawMorph (t conoP-t)
+        law3 : {C : Obj D} {f : HomD C A} {g : HomD C B} {h : HomD C (Apex conoP)} → proj1 ∙D h ≅ f → proj2 ∙D h ≅ g → h ≅ ⟨ f , g ⟩
+        law3 {C} {.((ψ (cone-lim L) tt) ∙D h)} {.((ψ (cone-lim L) ff) ∙D h)} {h} refl refl = 
+          Library.sym (proof
+            ⟨ proj1 ∙D h , proj2 ∙D h ⟩
+            ≅⟨ refl ⟩
+            {!   !}
+            ≅⟨ {!   !} ⟩ 
+            {!   !}
+            ≅⟨ {!   !} ⟩
+            h
+            ∎ )
+          where
+            conoN2-ψ : (X : Obj Dos) → HomD C (OMap F X)
+            conoN2-ψ tt = (ψ (cone-lim L) tt) ∙D h
+            conoN2-ψ ff = (ψ (cone-lim L) ff) ∙D h
+            conoN2-law : {X Y : Obj Dos} (h2 : Hom Dos X Y) → (HMap F h2) ∙D (conoN2-ψ X) ≅ conoN2-ψ Y
+            conoN2-law {tt} {tt} refl = idl D
+            conoN2-law {ff} {ff} refl = idl D
+            conoN2 : Cone Dos D F
+            conoN2 = cono C conoN2-ψ conoN2-law
+          -- ⟨ ψ conoP tt ∙D h , ψ conoP ff ∙D h ⟩   
