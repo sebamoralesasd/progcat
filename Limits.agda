@@ -206,7 +206,7 @@ module Lim-product {D : Cat {c} {d}}{A B : Obj D}(L : Limit Dos D (FunProd D A B
   prod-is-lim : ProductsCore A B
   prod-is-lim =
     prodCore
-      (Apex conoP) proj1 proj2 ⟨_,_⟩ law1 law2 {!   !}
+      (Apex conoP) proj1 proj2 ⟨_,_⟩ law1 law2 law3
       where
         open Cat D using () renaming (Hom to HomD ; _∙_ to _∙D_)
         open Terminal
@@ -234,22 +234,50 @@ module Lim-product {D : Cat {c} {d}}{A B : Obj D}(L : Limit Dos D (FunProd D A B
         law2 {C} {f} {g} = lawMorph (t conoP-t)
         law3 : {C : Obj D} {f : HomD C A} {g : HomD C B} {h : HomD C (Apex conoP)} → proj1 ∙D h ≅ f → proj2 ∙D h ≅ g → h ≅ ⟨ f , g ⟩
         law3 {C} {.((ψ (cone-lim L) tt) ∙D h)} {.((ψ (cone-lim L) ff) ∙D h)} {h} refl refl = 
-          Library.sym (proof
-            ⟨ proj1 ∙D h , proj2 ∙D h ⟩
-            ≅⟨ refl ⟩
-            {!   !}
-            ≅⟨ {!   !} ⟩ 
-            {!   !}
-            ≅⟨ {!   !} ⟩
-            h
-            ∎ )
+          Library.trans (
+            Library.sym (
+              cong CHom (law conoP-t {conoN2}{cone-morph-1}))
+              ) (cong CHom (law conoP-t {conoN2}{cone-morph-2}))
           where
             conoN2-ψ : (X : Obj Dos) → HomD C (OMap F X)
-            conoN2-ψ tt = (ψ (cone-lim L) tt) ∙D h
-            conoN2-ψ ff = (ψ (cone-lim L) ff) ∙D h
+            conoN2-ψ tt = (ψ (cone-lim L) tt) ∙D h  -- f
+            conoN2-ψ ff = (ψ (cone-lim L) ff) ∙D h  -- g
             conoN2-law : {X Y : Obj Dos} (h2 : Hom Dos X Y) → (HMap F h2) ∙D (conoN2-ψ X) ≅ conoN2-ψ Y
             conoN2-law {tt} {tt} refl = idl D
             conoN2-law {ff} {ff} refl = idl D
             conoN2 : Cone Dos D F
             conoN2 = cono C conoN2-ψ conoN2-law
-          -- ⟨ ψ conoP tt ∙D h , ψ conoP ff ∙D h ⟩   
+            cone-morph-1 : ConeMorph conoN2 conoP -- chom = h
+            cone-morph-1 = conoM h lawMorph-1
+              where 
+                lawMorph-1 : {X : Obj Dos} → ψ conoP X ∙D h ≅ ψ conoN2 X
+                lawMorph-1 {tt} = refl
+                lawMorph-1 {ff} = refl
+            cone-morph-2 : ConeMorph conoN2 conoP -- chom = fxg
+            cone-morph-2 = conoM ⟨ ((ψ (cone-lim L) tt) ∙D h) , ((ψ (cone-lim L) ff) ∙D h)⟩ lawMorph-2
+              where 
+                lawMorph-2 : {X : Obj Dos} → ψ conoP X ∙D ⟨ ((ψ (cone-lim L) tt) ∙D h), ((ψ (cone-lim L) ff) ∙D h)⟩ ≅ ψ conoN2 X
+                lawMorph-2 {tt} = 
+                  proof          -- f x g
+                    ψ conoP tt ∙D ⟨ ψ conoP tt ∙D h , ψ conoP ff ∙D h ⟩
+                    ≅⟨ refl ⟩
+                    ψ conoP tt ∙D CHom (t conoP-t)
+                    ≅⟨ lawMorph (t conoP-t) ⟩
+                    conoN2-ψ tt
+                    ≅⟨ Library.sym (idl D) ⟩
+                    HMap F refl ∙D conoN2-ψ tt
+                    ≅⟨ conoN2-law {Y = tt} refl ⟩
+                    ψ conoN2 tt
+                    ∎
+                lawMorph-2 {ff} = 
+                  proof          -- f x g
+                    ψ conoP ff ∙D ⟨ ψ conoP tt ∙D h , ψ conoP ff ∙D h ⟩
+                    ≅⟨ refl ⟩
+                    ψ conoP ff ∙D CHom (t conoP-t)
+                    ≅⟨ lawMorph (t conoP-t) ⟩
+                    conoN2-ψ ff
+                    ≅⟨ Library.sym (idl D) ⟩
+                    HMap F refl ∙D conoN2-ψ ff
+                    ≅⟨ conoN2-law {Y = ff} refl ⟩
+                    ψ conoN2 ff
+                    ∎
