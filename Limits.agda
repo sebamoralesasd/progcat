@@ -235,15 +235,15 @@ module Lim-product {D : Cat {c} {d}}{A B : Obj D}(L : Limit Dos D (FunProd D A B
         law2 : {C : Obj D} {f : HomD C A} {g : HomD C B} → proj2 ∙D ⟨ f , g ⟩ ≅ g
         law2 {C} {f} {g} = lawMorph (t conoP-t)
         law3 : {C : Obj D} {f : HomD C A} {g : HomD C B} {h : HomD C (Apex conoP)} → proj1 ∙D h ≅ f → proj2 ∙D h ≅ g → h ≅ ⟨ f , g ⟩
-        law3 {C} {.((ψ conoP tt) ∙D h)} {.((ψ conoP ff) ∙D h)} {h} refl refl =
+        law3 {C} {.(proj1 ∙D h)} {.(proj2 ∙D h)} {h} refl refl =
           trans (
             sym (
               cong CHom (law conoP-t {conoN2}{cone-morph-1}))
               ) (cong CHom (law conoP-t {conoN2}{cone-morph-2}))
           where
             conoN2-ψ : (X : Obj Dos) → HomD C (OMap F X)
-            conoN2-ψ tt = (ψ conoP tt) ∙D h  -- f
-            conoN2-ψ ff = (ψ conoP ff) ∙D h  -- g
+            conoN2-ψ tt = proj1 ∙D h  -- f
+            conoN2-ψ ff = proj2 ∙D h  -- g
             conoN2-law : {X Y : Obj Dos} (h2 : Hom Dos X Y) → (HMap F h2) ∙D (conoN2-ψ X) ≅ conoN2-ψ Y
             conoN2-law {tt} {tt} refl = idl D
             conoN2-law {ff} {ff} refl = idl D
@@ -256,9 +256,9 @@ module Lim-product {D : Cat {c} {d}}{A B : Obj D}(L : Limit Dos D (FunProd D A B
                 lawMorph-1 {tt} = refl
                 lawMorph-1 {ff} = refl
             cone-morph-2 : ConeMorph conoN2 conoP -- chom = fxg
-            cone-morph-2 = conoM ⟨ ((ψ conoP tt) ∙D h) , ((ψ conoP ff) ∙D h)⟩ lawMorph-2
+            cone-morph-2 = conoM ⟨ (proj1 ∙D h) , (proj2 ∙D h)⟩ lawMorph-2
               where
-                lawMorph-2 : {X : Obj Dos} → ψ conoP X ∙D ⟨ ((ψ conoP tt) ∙D h), ((ψ conoP ff) ∙D h)⟩ ≅ ψ conoN2 X
+                lawMorph-2 : {X : Obj Dos} → ψ conoP X ∙D ⟨ (proj1 ∙D h), (proj2 ∙D h)⟩ ≅ ψ conoN2 X
                 lawMorph-2 {tt} =
                   proof          -- f x g
                     ψ conoP tt ∙D ⟨ ψ conoP tt ∙D h , ψ conoP ff ∙D h ⟩
