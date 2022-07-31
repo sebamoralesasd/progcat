@@ -2,10 +2,10 @@
 
 module Limits where
 
+-- open import Naturals
+-- open import Functors.Constant
 open import Library
-open import Naturals
 open import Functors
-open import Functors.Constant
 open import Categories
 
 open Cat
@@ -31,6 +31,10 @@ record Cone (C : Cat {a} {b}) (D : Cat {c} {d}) (F : Fun C D) : Set (a ⊔ b ⊔
 
 open Cone
 
+
+{- Damos todas las definiciones necesarias para -valga la
+  redundancia- definir la categoría de conos. -}
+
 {- Morfismos de la categoría de conos -}
 record ConeMorph {C : Cat {a} {b}} {D : Cat {c} {d}} {F : Fun C D}
   (Ca Cb : Cone C D F) : Set (lsuc (a ⊔ b ⊔ c ⊔ d)) where
@@ -41,6 +45,7 @@ record ConeMorph {C : Cat {a} {b}} {D : Cat {c} {d}} {F : Fun C D}
     lawMorph : ∀{X : Obj C} → ψ Cb X ∙D CHom ≅ ψ Ca X
 
 open ConeMorph
+
 
 {- Composición de conos -}
 Cone-comp : {C : Cat {a} {b}} {D : Cat {c} {d}}{F : Fun C D}{Ca Cb Cc : Cone C D F} →
@@ -64,6 +69,7 @@ Cone-comp {C = C} {D} {F} {Ca} {Cb} {Cc} bc ab
 {- Definición de igualdad para morfismos de conos -}
 open import Relation.Binary.PropositionalEquality hiding (cong ; sym ; trans)
 
+{- Aplicamos irrelevancia de pruebas sobre las leyes de los morfismos .-}
 ConeMorph-eq : {C : Cat {a} {b}} {D : Cat {c} {d}}{F : Fun C D}{Ca Cb : Cone C D F}
   { Cm Cm' : ConeMorph Ca Cb} →
   (CHom Cm) ≅ (CHom Cm') →
@@ -85,7 +91,30 @@ Cones C D F =
     ; ass = ConeMorph-eq (ass D)
     }
 
-{- Definición de categoría vacía -}
+
+
+
+{- Un límite es el objeto terminal de la categoría de conos. -}
+open import Categories.Terminal
+
+record Limit (C : Cat {a} {b}) (D : Cat {c} {d}) (F : Fun C D) : Set (lsuc (a ⊔ b ⊔ c ⊔ d)) where
+  constructor limite
+  field
+    cone-lim : Obj (Cones C D F)
+    is-terminal : Terminal (Cones C D F) cone-lim
+
+open Limit
+
+---------------
+
+
+{- Un objeto terminal es un límite.
+
+   Dada la unicidad (hasta un isomorfismo) del objeto terminal,
+   se prueba que, dado un límite de un funtor F : 0 → D, se puede
+   construir el objeto terminal de D. -}
+
+{- Definición de categoría vacía (0) -}
 empty : Cat {lzero} {lzero}
 empty =
   record
@@ -112,22 +141,9 @@ empty =
         AssEmpty {()}
 
 
-{- Un límite es el objeto terminal de la categoría de conos. -}
-open import Categories.Terminal
-
-record Limit (C : Cat {a} {b}) (D : Cat {c} {d}) (F : Fun C D) : Set (lsuc (a ⊔ b ⊔ c ⊔ d)) where
-  constructor limite
-  field
-    cone-lim : Obj (Cones C D F)
-    is-terminal : Terminal (Cones C D F) cone-lim
-
-open Limit
-
-
 {- Un objeto terminal es un límite.
   Se define un objeto terminal en D con el límite que se conforma a partir
-  del funtor que va de la categoría vacía hacia D.
--}
+  del funtor F : 0 → D. -}
 module Lim-terminal {D : Cat {c} {d}}{F : Fun empty D}(L : Limit empty D F) where
 
   open Limit L renaming (cone-lim to conoL ; is-terminal to conoL-t)
@@ -144,6 +160,7 @@ module Lim-terminal {D : Cat {c} {d}}{F : Fun empty D}(L : Limit empty D F) wher
                   conoN-law : {X Y : ⊥} (f : Hom empty X Y) → HMap F f ∙D conoN-ψ X ≅ conoN-ψ Y
                   conoN-law {()} {Y}
           t-term : {N : Obj D} → HomD N (Apex conoL)
+                          -- t conoL-t : ConeMorph
           t-term {N} = CHom (t conoL-t {conoN N})
           law-term : {X : Obj D} {f : HomD X (Apex conoL)} → t-term {X} ≅ f
           law-term {X} {f} =
@@ -163,10 +180,13 @@ module Lim-terminal {D : Cat {c} {d}}{F : Fun empty D}(L : Limit empty D F) wher
 
 
 
+
 {- Un producto es un límite.
-  Se construye un producto a partir del límite que se conforma a partir
-  del funtor que va de la categoría 2 a D
--}
+
+   Dada la unicidad (hasta un isomorfismo) del producto,
+   se prueba que, dado un límite de un funtor F : 2 → D, se puede
+   construir el producto de D. -}
+
 
 {- Defino dos objetos cualquiera para definir la categoría 2 -}
 data Bool : Set where
@@ -196,6 +216,12 @@ FunProd D A B =
 
 
 
+
+{- Un producto es un límite.
+  Se construye un producto a partir del límite que se conforma a partir
+  del funtor F : 2 → D y dos objetos (A, B) de D.
+-}
+
 module Lim-product {D : Cat {c} {d}}{A B : Obj D}(L : Limit Dos D (FunProd D A B)) where
 
   open import Categories.ProductsCore D
@@ -207,6 +233,7 @@ module Lim-product {D : Cat {c} {d}}{A B : Obj D}(L : Limit Dos D (FunProd D A B
   prod-is-lim : ProductsCore A B
   prod-is-lim =
     prodCore
+      -- Buscamos que la cúspide del cono sea el objeto del producto.
       (Apex conoP) proj1 proj2 ⟨_,_⟩ law1 law2 law3
       where
         open Cat D using () renaming (Hom to HomD ; _∙_ to _∙D_)
@@ -236,6 +263,9 @@ module Lim-product {D : Cat {c} {d}}{A B : Obj D}(L : Limit Dos D (FunProd D A B
         law2 {C} {f} {g} = lawMorph (t conoP-t)
         law3 : {C : Obj D} {f : HomD C A} {g : HomD C B} {h : HomD C (Apex conoP)} → proj1 ∙D h ≅ f → proj2 ∙D h ≅ g → h ≅ ⟨ f , g ⟩
         law3 {C} {.(proj1 ∙D h)} {.(proj2 ∙D h)} {h} refl refl =
+
+          --          lawMorph-1         ^          lawMorph-2
+          -- ψ conoP X ∙D h ≅ ψ conoN2 X ^ ψ conoN2 X ≅ ψ conoP X ∙D ⟨f,g⟩
           trans (
             sym (
               cong CHom (law conoP-t {conoN2}{cone-morph-1}))
@@ -249,18 +279,18 @@ module Lim-product {D : Cat {c} {d}}{A B : Obj D}(L : Limit Dos D (FunProd D A B
             conoN2-law {ff} {ff} refl = idl D
             conoN2 : Cone Dos D F
             conoN2 = cono C conoN2-ψ conoN2-law
-            cone-morph-1 : ConeMorph conoN2 conoP -- chom = h
+            cone-morph-1 : ConeMorph conoN2 conoP     -- h morfismo de cúspides
             cone-morph-1 = conoM h lawMorph-1
               where
                 lawMorph-1 : {X : Obj Dos} → ψ conoP X ∙D h ≅ ψ conoN2 X
                 lawMorph-1 {tt} = refl
                 lawMorph-1 {ff} = refl
-            cone-morph-2 : ConeMorph conoN2 conoP -- chom = fxg
+            cone-morph-2 : ConeMorph conoN2 conoP     -- <f,g> morfismo de cúspides
             cone-morph-2 = conoM ⟨ (proj1 ∙D h) , (proj2 ∙D h)⟩ lawMorph-2
               where
                 lawMorph-2 : {X : Obj Dos} → ψ conoP X ∙D ⟨ (proj1 ∙D h), (proj2 ∙D h)⟩ ≅ ψ conoN2 X
                 lawMorph-2 {tt} =
-                  proof          -- f x g
+                  proof                        -- <f,g>
                     ψ conoP tt ∙D ⟨ ψ conoP tt ∙D h , ψ conoP ff ∙D h ⟩
                     ≅⟨ refl ⟩
                     ψ conoP tt ∙D CHom (t conoP-t)
@@ -272,7 +302,7 @@ module Lim-product {D : Cat {c} {d}}{A B : Obj D}(L : Limit Dos D (FunProd D A B
                     ψ conoN2 tt
                     ∎
                 lawMorph-2 {ff} =
-                  proof          -- f x g
+                  proof                        -- <f,g>
                     ψ conoP ff ∙D ⟨ ψ conoP tt ∙D h , ψ conoP ff ∙D h ⟩
                     ≅⟨ refl ⟩
                     ψ conoP ff ∙D CHom (t conoP-t)
