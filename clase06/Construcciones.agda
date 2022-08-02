@@ -102,31 +102,45 @@ module ProductMorphisms (p : Products)
 
   {- Toda categoría con productos posee los siguientes morfismos -}
   unit : ∀{A} → Hom (A × Uno) A
-  unit = {!!}
+  unit = π₁
 
   swap : ∀{A B} → Hom (A × B)  (B × A)
-  swap = {!!}
+  swap = ⟨ π₂ , π₁ ⟩
 
   assoc : ∀{A B C} → Hom ((A × B) × C) (A × (B × C))
-  assoc = {!!}
+  assoc {A} {B} {C} = ⟨ π₁ ∙ π₁ , ⟨ π₂ ∙ π₁ , π₂ ⟩ ⟩
 
   -- Ejercicio extra Probar que unit, swap, y assoc son isomorfismos.
 
   {- Definir el morfismo pair -}
   pair : ∀{A B C D}(f : Hom A B)(g : Hom C D)
        → Hom (A × C) (B × D)
-  pair f g = {!!}
+  pair {A} {B} {C} {D} f g = ⟨ f ∙ π₁ , g ∙ π₂ ⟩
 
   -- Probar las siguientes propiedades de pair
-
+              --  → pair (idenx: X → X) (ideny: Y → Y) ≅ iden (XxY → XxY)
   idpair : ∀{X Y} → pair (iden {X}) (iden {Y}) ≅ iden {X × Y}
-  idpair {X} {Y} = {!!}
+  idpair {X} {Y} = sym (law3 (trans idr (sym idl)) (trans idr (sym idl)))
 
   compdistrib : ∀{A B C D E F}
               → (f : Hom B C)(g : Hom A B)
               → (h : Hom E F)(i : Hom D E)
               → pair (f ∙ g) (h ∙ i) ≅ pair f h ∙ pair g i
-  compdistrib f g h i = {!!}
+  compdistrib {A} {B} {C} {D} {E} {F} f g h i = sym (law3 {!   !} {!   !})
+
+  compdistribPrueba1 : ∀{A B C D E F}
+                → (f : Hom B C)(g : Hom A B)
+                → (h : Hom E F)(i : Hom D E)
+                → π₁ ∙ pair f h ∙ pair g i ≅ (f ∙ g) ∙ π₁ {A} {D}
+  compdistribPrueba1 f g h i = 
+    proof
+    π₁ ∙ pair f h ∙ pair g i
+    ≡⟨ {!   !} ⟩
+    {!   !}
+    ≡⟨ {!   !} ⟩
+    {!   !}
+    ∎
+
 
 ----------------------
 -- Inicial

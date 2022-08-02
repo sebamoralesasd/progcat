@@ -29,22 +29,41 @@ record CCC : Set (a ⊔ b) where
 
   {- Ejercicio: completar la definición -}
   map⇒ : ∀{X Y Z} → Hom X Z → Hom (Y ⇒ X) (Y ⇒ Z)
-  map⇒ f = {!   !}
+  map⇒ f = curry (f ∙ apply)
 
-module Properties (isCCC : CCC) where
+module Properties (isCCC : CCC) where 
   open CCC isCCC
   open import Categories.Products.Properties hasProducts 
-         using (comp-pair ; iden-pair ; iden-comp-pair)
+         using (comp-pair ; iden-pair)
   
  
   {- Ejercicio: map⇒ preserva identidades. -}
   map⇒iden : ∀{X Y} → map⇒ {X} {Y} {X} (iden {X}) ≅ iden {Y ⇒ X}
-  map⇒iden = {!   !}
+  map⇒iden {X} {Y} = proof
+    curry (iden ∙ uncurry iden)
+    ≅⟨ cong curry idl  ⟩
+    curry (uncurry iden)
+    ≅⟨ lawcurry2 ⟩
+    iden
+    ∎
 
   {- Ejercicio: Propiedad de curry con map⇒. Caso particular de nat-curry, con f = iden. -}
   curry-prop : ∀{X Y Z Z'}{f : Hom (X × Y) Z}{g : Hom Z Z'}
               →  map⇒ g ∙ curry f ≅ curry (g ∙ f)
-  curry-prop {f = f} {g} = {!   !}
+  curry-prop {f = f} {g} = 
+    proof
+      curry (g ∙ uncurry iden) ∙ curry f
+      ≅⟨ sym idr ⟩
+      (curry (g ∙ uncurry iden) ∙ curry f) ∙ iden
+      ≅⟨ ass ⟩
+      curry (g ∙ uncurry iden) ∙ curry f ∙ iden
+      ≅⟨ nat-curry ⟩
+      curry (g ∙ f ∙ pair iden iden)
+      ≅⟨ cong (λ x → curry ( g ∙ f ∙ x)) iden-pair ⟩
+      curry (g ∙ f ∙ iden)
+     ≅⟨ cong (λ x → curry (g ∙ x)) idr ⟩
+      curry (g ∙ f)
+      ∎
 
   {- Ejercicio: probar que para todo objeto B,  B⇒_ define un endofunctor -}
 
@@ -58,4 +77,4 @@ module Properties (isCCC : CCC) where
   curry-exp : ∀{X Y Z} {f : Hom (X × Y) Z} →  apply ∙ pair (curry f) iden ≅ f
   curry-exp {f = f} = {!   !}
 
-  
+   

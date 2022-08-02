@@ -45,7 +45,7 @@ module Monoids where
       opers :  (⊤ → M) × (M × M → M)
 
   equiv2 : RawMonoid2 → RawMonoid3
-  equiv2 = {!   !}
+  equiv2 record { M = M ; ε = ε ; _⊗_ = _⊗_ } = record { M = M ; opers = ε , _⊗_ }
 
 
   -- en lugar de tener un par de operaciones, podemos una operación cuyo dominio es una suma
@@ -56,7 +56,8 @@ module Monoids where
       opers :  (⊤ ⊎ M × M) → M
 
   equiv3 : RawMonoid3 → RawMonoid4
-  equiv3 = {!   !}
+  equiv3 record { M = M ; opers = opers } = record { M = M ; opers = λ {(inj₁ x) → fst opers x
+                                                                      ; (inj₂ y) → snd opers y} }
 
 
 
@@ -72,10 +73,10 @@ module Monoids where
   {- Dar una MonF-Algebra es lo mismo que dar un RawMonoid_i -}
 
   equiv4 : RawMonoid4 → F-algebra 
-  equiv4 = {!   !}
+  equiv4 record { M = M ; opers = opers } = falgebra M opers
 
   equiv5 : F-algebra → RawMonoid
-  equiv5 = {!   !}
+  equiv5 (falgebra carrier algebra) = record { M = carrier ; ε =  algebra (inj₁ tt) ; _⊗_ = λ x y → algebra (inj₂ (x , y)) }
 
 
   -- Algunas algebra para MonF
@@ -87,12 +88,11 @@ module Monoids where
   Nat-alg1 = falgebra ℕ [ (λ _ → 0) , uncurry _+_ ]
 
   Nat-alg2 : F-algebra
-  Nat-alg2 = {!   !}
-  
+  Nat-alg2 = falgebra ℕ [ ((λ _ → 1)) , uncurry _*_ ]
   open import Data.List hiding ([_])
 
   List-alg : (X : Set) → F-algebra
-  List-alg X = {!   !}
+  List-alg X = falgebra (List X) [ (λ x → []) , uncurry _++_ ]
 
 ------------------------------
 
@@ -109,9 +109,9 @@ module Maybe where
   open import Data.Nat
 
   Nat-alg3 : F-algebra
-  Nat-alg3 = falgebra ℕ {!   !}
+  Nat-alg3 = falgebra ℕ [ (λ _ → 1) , (λ x → x) ]
 
   open import Data.List hiding ([_])
 
-  List-alg : F-algebra
-  List-alg = {!   !}
+  List-alg : (X : Set) → F-algebra
+  List-alg X = falgebra ((List X)) [ (λ x → []) , (λ x → x) ]
